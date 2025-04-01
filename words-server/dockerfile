@@ -1,0 +1,32 @@
+# 使用官方的 Go 语言镜像作为基础镜像
+FROM golang:1.23.6-alpine AS builder
+
+# 设置工作目录为 /app
+WORKDIR /app
+
+# 将当前项目目录的所有文件拷贝到容器的 /app 目录中
+COPY . .
+
+# 下载项目的依赖
+RUN --network=host go env -w GOPROXY=https://goproxy.cn,direct && go mod download
+
+# 编译 Go 项目，生成可执行文件 words-server
+RUN go build -o words-server
+
+# 使用一个更小的基础镜像来运行应用程序
+FROM alpine:latest
+
+# 安装 tzdata 包，确保支持时区的配置
+RUN --network=host apk add --no-cache tzdata
+
+# 设置工作目录为 /app
+WORKDIR /app
+
+# 从编译阶段的镜像中拷贝编译后的二进制文件到运行镜像中
+COPY --from=builder /app/words-server /app/words-server
+
+# 暴露容器的 8080 端口
+EXPOSE 8080
+
+# 设置容器启动时运行的命令
+CMD ["/app/words-server"]
