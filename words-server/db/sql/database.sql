@@ -10,5 +10,5 @@ CREATE TABLE words (
     subject varchar(256) NOT NULL UNIQUE,
     translation varchar(256) NOT NULL UNIQUE,
     rate numeric NOT NULL,
-    rate_up_at timestamp NOT NULL NOW()
+    rate_up_at timestamp NOT NULL
 );

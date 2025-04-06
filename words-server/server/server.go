@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"example.com/Sinezx/words-server/util"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
@@ -31,7 +32,7 @@ func Run() {
 	// add handlers
 	wordGoup := v1.Group("/word")
 	wordGoup.Use(func(c *gin.Context) {
-		session := sessions.Default(c)
+		session := util.GetSession(c)
 		if session.Get("dbconnect") != true {
 			c.JSON(http.StatusNonAuthoritativeInfo, gin.H{
 				"message": "please request after datasource connect",

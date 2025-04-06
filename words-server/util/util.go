@@ -1,7 +1,6 @@
 package util
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -10,24 +9,6 @@ import (
 
 // 30 days
 var AlarmHours = 30 * 24.0
-
-var sessionMap map[string]context.CancelFunc
-
-func initSessionMap() {
-	if sessionMap == nil {
-		sessionMap = make(map[string]context.CancelFunc)
-	}
-}
-
-func SetSessionFunc(id string, cf context.CancelFunc) {
-	initSessionMap()
-	sessionMap[id] = cf
-}
-
-func GetSessionFunc(id string) context.CancelFunc {
-	initSessionMap()
-	return sessionMap[id]
-}
 
 // param x unit: hour
 func TheEbbinghausForgettingCurve(x float64) float64 {
@@ -45,8 +26,4 @@ func Info(str string) {
 
 func InfoFormat(format string, args ...any) {
 	slog.Info(fmt.Sprintf(format, args...))
-}
-
-func Error(str string) {
-	slog.Error(str)
 }

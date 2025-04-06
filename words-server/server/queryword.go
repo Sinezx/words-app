@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"example.com/Sinezx/words-server/db"
+	"example.com/Sinezx/words-server/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,13 +26,15 @@ type QueryResp struct {
 }
 
 func queryword(c *gin.Context) {
+	session := util.GetSession(c)
 	var queryReq QueryReq
 	c.BindJSON(&queryReq)
 	err := valid(&queryReq)
 	if err == nil {
 		// query words by limit
 		offset := queryReq.PageSize * (queryReq.Page - 1)
-		total, res, err := db.Query(offset, queryReq.PageSize)
+		total, res, err := db.Query(session.DB(), offset, queryReq.PageSize)
+		util.InfoFormat("[session:%s]->query Total: %d", session.ID(), total)
 		if err == nil {
 			queryResp := QueryResp{Total: total, Words: swap(res, total)}
 			StatusOK(c, &queryResp)

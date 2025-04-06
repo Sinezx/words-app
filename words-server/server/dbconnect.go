@@ -7,7 +7,6 @@ import (
 
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/util"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,7 +20,7 @@ type ConnectParams struct {
 }
 
 func dbconnect(c *gin.Context) {
-	clearSession(c)
+	session := util.GetSession(c)
 	connectParams := ConnectParams{}
 	c.BindJSON(&connectParams)
 	var builder strings.Builder
@@ -38,19 +37,20 @@ func dbconnect(c *gin.Context) {
 	builder.WriteByte(' ')
 	builder.WriteString(connectParams.Conf)
 	dsn := builder.String()
-	err := db.Connt(dsn)
+	util.InfoFormat("[session:%s]->dsn: %s", session.ID(), dsn)
+	currentdb, err := db.Connt(dsn)
 	if err == nil {
 
 		// save info to session
-		session := sessions.Default(c)
-		session.Set("dbconnect", true)
+		session.SetPoint(util.DataBase, currentdb)
+		session.Set(util.DataBaseConnectFlag, true)
 		session.Save()
 
 		// schedule start
 		ctx, cancel := context.WithCancel(context.Background())
 		ticker := time.NewTicker(time.Hour)
-		util.SetSessionFunc(session.ID(), cancel)
-		go db.UpdateWordSchedule(ticker, &ctx)
+		session.SetFunc(util.UpdateWordCancelFuncId, cancel)
+		go db.UpdateWordSchedule(currentdb, ticker, &ctx)
 
 		StatusOK(c, &gin.H{"message": "success"})
 	} else {
@@ -64,12 +64,13 @@ func disdbconnect(c *gin.Context) {
 }
 
 func clearSession(c *gin.Context) {
-	session := sessions.Default(c)
+	session := util.GetSession(c)
 	// kill schedule ticker goroutine
-	cancel := util.GetSessionFunc(session.ID())
+	cancel := session.GetFunc(util.UpdateWordCancelFuncId)
 	if cancel != nil {
 		cancel()
 	}
 	session.Clear()
 	session.Save()
+	util.InfoFormat("[session:%s]->disconnect", session.ID())
 }
