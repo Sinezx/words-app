@@ -25,17 +25,15 @@ func Run() {
 	store := memstore.NewStore([]byte("store"))
 	v1.Use(sessions.Sessions("mystore", store))
 
-	//datasoure connect
-	v1.POST("/dbconnect", dbconnect)
-	v1.GET("/disdbconnect", disdbconnect)
+	v1.POST("/sayhi", sayhi)
 
 	// add handlers
 	wordGoup := v1.Group("/word")
 	wordGoup.Use(func(c *gin.Context) {
-		session := util.GetSession(c)
-		if session.Get("dbconnect") != true {
+		session := sessions.Default(c)
+		if session.Get(util.SessionUserIdKey) == nil {
 			c.JSON(http.StatusNonAuthoritativeInfo, gin.H{
-				"message": "please request after datasource connect",
+				"message": "Ladies and Gentlemen, say hi to me",
 			})
 			c.Abort()
 		} else {
@@ -55,4 +53,10 @@ func StatusOK(c *gin.Context, resp ...any) {
 
 func StatusBadRequest(c *gin.Context, resp ...any) {
 	c.JSON(http.StatusBadRequest, resp)
+}
+
+func ErrorHandler(c *gin.Context, err error) {
+	StatusBadRequest(c, &gin.H{
+		"message": err.Error(),
+	})
 }

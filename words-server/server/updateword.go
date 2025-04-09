@@ -3,6 +3,7 @@ package server
 import (
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/util"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,15 +13,17 @@ type UpdateWord struct {
 }
 
 func updateword(c *gin.Context) {
-	session := util.GetSession(c)
+	session := sessions.Default(c)
 	var updateWord UpdateWord
 	c.BindJSON(&updateWord)
 	switch updateWord.Status {
 	case util.Remember:
-		word, err := db.UpdateWordRate(session.DB(), updateWord.ID)
-		util.InfoFormat("[session:%s]->word: %d rate update", session.ID(), word.ID)
+		err := db.UpdateWordRate(updateWord.ID)
 		if err == nil {
-			StatusOK(c, &word)
+			util.InfoFormat("[session:%s]->word: %d rate update", session.ID(), updateWord.ID)
+			StatusOK(c, &gin.H{
+				"message": "word's rate is updated",
+			})
 		} else {
 			StatusBadRequest(c, &gin.H{
 				"message": err.Error(),

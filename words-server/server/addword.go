@@ -1,28 +1,26 @@
 package server
 
 import (
-	"time"
-
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/util"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
 type AddWord struct {
-	Subject     string `json:"subject"`
-	Translation string `json:"translation"`
+	SourceText string `json:"source_text"`
+	TargetText string `json:"target_text"`
 }
 
 func addword(c *gin.Context) {
-	session := util.GetSession(c)
+	session := sessions.Default(c)
 	var addWord AddWord
 	c.BindJSON(&addWord)
 	var word db.Word
-	word.Subject = addWord.Subject
-	word.Translation = addWord.Translation
-	word.RateUpAt = time.Now().UTC()
-	word.Rate = util.TheEbbinghausForgettingCurve(float64(1) / 60)
-	id, err := db.Insert(session.DB(), &word)
+	word.UserId = session.Get(util.SessionUserIdKey).(int)
+	word.SourceText = addWord.SourceText
+	word.TargetText = addWord.TargetText
+	id, err := db.InsertWord(&word)
 	if err == nil {
 		util.InfoFormat("[session:%s]->word insert success, id: %d", session.ID(), id)
 	} else {

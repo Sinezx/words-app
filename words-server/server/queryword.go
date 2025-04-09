@@ -5,6 +5,7 @@ import (
 
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/util"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,10 +15,10 @@ type QueryReq struct {
 }
 
 type QueryWord struct {
-	ID          uint    `json:"id"`
-	Subject     string  `json:"subject"`
-	Translation string  `json:"translation"`
-	Rate        float64 `json:"rate"`
+	ID         uint    `json:"id"`
+	SourceText string  `json:"source_text"`
+	TargetText string  `json:"target_text"`
+	Rate       float64 `json:"rate"`
 }
 
 type QueryResp struct {
@@ -26,14 +27,14 @@ type QueryResp struct {
 }
 
 func queryword(c *gin.Context) {
-	session := util.GetSession(c)
+	session := sessions.Default(c)
 	var queryReq QueryReq
 	c.BindJSON(&queryReq)
 	err := valid(&queryReq)
 	if err == nil {
 		// query words by limit
 		offset := queryReq.PageSize * (queryReq.Page - 1)
-		total, res, err := db.Query(session.DB(), offset, queryReq.PageSize)
+		total, res, err := db.QueryWordsByUserId(session.Get(util.SessionUserIdKey).(int), offset, queryReq.PageSize)
 		util.InfoFormat("[session:%s]->query Total: %d", session.ID(), total)
 		if err == nil {
 			queryResp := QueryResp{Total: total, Words: swap(res, total)}
@@ -58,8 +59,8 @@ func swap(source []db.Word, len int64) []QueryWord {
 	queryWords := make([]QueryWord, len)
 	for i, w := range source {
 		queryWords[i].ID = w.ID
-		queryWords[i].Subject = w.Subject
-		queryWords[i].Translation = w.Translation
+		queryWords[i].SourceText = w.SourceText
+		queryWords[i].SourceText = w.SourceText
 		queryWords[i].Rate = w.Rate
 	}
 	return queryWords

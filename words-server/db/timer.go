@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"example.com/Sinezx/words-server/util"
-	"gorm.io/gorm"
 )
 
-func queryAllWordUpdatedAt(db *gorm.DB) (int64, []Word, error) {
+func queryAllWordUpdatedAt() (int64, []Word, error) {
 	var words []Word
-	result := db.Select("id", "rate_up_at").Find(&words)
+	result := gormDB.Select("id", "rate_up_at").Find(&words)
 	if result.Error == nil {
 		return result.RowsAffected, words, nil
 	} else {
@@ -18,8 +17,8 @@ func queryAllWordUpdatedAt(db *gorm.DB) (int64, []Word, error) {
 	}
 }
 
-func updateWordRate(db *gorm.DB, word *Word) {
-	db.Model(&word).Updates(map[string]interface{}{"rate": word.Rate})
+func updateWordRate(word *Word) {
+	gormDB.Model(&word).Updates(map[string]any{"rate": word.Rate})
 	// db.Exec("UPDATE words SET rate = ? WHERE id = ?", word.Rate, word.ID)
 }
 
@@ -33,31 +32,30 @@ func calculateWordRate(w *Word, t *time.Time) {
 	}
 }
 
-func UpdateWordScheduleDone(ctx *context.Context) bool {
-	select {
-	case <-(*ctx).Done():
-		return true
-	default:
-		return false
-	}
-}
+// func UpdateWordScheduleDone(ctx *context.Context) bool {
+// 	select {
+// 	case <-(*ctx).Done():
+// 		return true
+// 	default:
+// 		return false
+// 	}
+// }
 
-func UpdateWordSchedule(db *gorm.DB, ticker *time.Ticker, ctx *context.Context) {
-LOOP:
+func UpdateWordSchedule(ticker *time.Ticker, ctx *context.Context) {
 	for {
 		<-ticker.C
 		// update all words rate
-		total, words, err := queryAllWordUpdatedAt(db)
+		total, words, err := queryAllWordUpdatedAt()
 		t := time.Now().UTC()
 		if err == nil && total > 0 {
 			for _, word := range words {
 				calculateWordRate(&word, &t)
 				// if datasource be changed, done this goroutine
-				if UpdateWordScheduleDone(ctx) {
-					util.Info("[schdule] database be changed")
-					break LOOP
-				}
-				updateWordRate(db, &word)
+				// if UpdateWordScheduleDone(ctx) {
+				// 	util.Info("[schdule] database be changed")
+				// 	break LOOP
+				// }
+				updateWordRate(&word)
 			}
 		}
 		util.Info("[schdule] update word")

@@ -1,8 +1,7 @@
 package util
 
 const (
-	DataBase               = "database"
-	DataBaseConnectFlag    = "dbconnect"
-	UpdateWordCancelFuncId = "updateWordCancelFunc"
-	Remember               = 0
+	ConfigFilePath   = "/config.json"
+	SessionUserIdKey = "user_id"
+	Remember         = 0
 )
