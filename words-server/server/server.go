@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"example.com/Sinezx/words-server/util"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
@@ -13,8 +14,16 @@ func Helloworld(c *gin.Context) {
 	c.JSON(http.StatusOK, "helloworld")
 }
 
-func Run() {
+func Run() error {
 	r := gin.Default()
+	// 配置CORS中间件
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:5173"}
+	config.AllowMethods = []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"}
+	config.AllowHeaders = []string{"Content-Type", "AccessToken", "X-CSRF-Token", "Authorization", "Token"}
+	config.AllowCredentials = true
+
+	r.Use(cors.New(config))
 
 	// example
 	v1 := r.Group("/api/v1")
@@ -25,6 +34,7 @@ func Run() {
 	store := memstore.NewStore([]byte("store"))
 	v1.Use(sessions.Sessions("mystore", store))
 
+	v1.POST("/reg", register)
 	v1.POST("/sayhi", sayhi)
 
 	// add handlers
@@ -44,19 +54,11 @@ func Run() {
 	wordGoup.POST("/addword", addword)
 	wordGoup.POST("/updateword", updateword)
 
-	r.Run()
-}
-
-func StatusOK(c *gin.Context, resp ...any) {
-	c.JSON(http.StatusOK, resp)
-}
-
-func StatusBadRequest(c *gin.Context, resp ...any) {
-	c.JSON(http.StatusBadRequest, resp)
+	return r.Run()
 }
 
 func ErrorHandler(c *gin.Context, err error) {
-	StatusBadRequest(c, &gin.H{
+	c.JSON(http.StatusBadRequest, &gin.H{
 		"message": err.Error(),
 	})
 }

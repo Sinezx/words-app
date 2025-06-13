@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/server"
 	"example.com/Sinezx/words-server/util"
@@ -12,5 +14,11 @@ func main() {
 	if err != nil {
 		util.Info("db connect failed")
 	}
-	server.Run()
+	ticker := time.NewTicker(time.Hour)
+	go db.UpdateWordSchedule(ticker)
+	err = server.Run()
+	if err != nil {
+		util.Info("server start failed")
+	}
+	util.Info("server start success")
 }

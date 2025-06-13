@@ -1,6 +1,8 @@
 package server
 
 import (
+	"net/http"
+
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/util"
 	"github.com/gin-contrib/sessions"
@@ -21,16 +23,14 @@ func updateword(c *gin.Context) {
 		err := db.UpdateWordRate(updateWord.ID)
 		if err == nil {
 			util.InfoFormat("[session:%s]->word: %d rate update", session.ID(), updateWord.ID)
-			StatusOK(c, &gin.H{
+			c.JSON(http.StatusOK, &gin.H{
 				"message": "word's rate is updated",
 			})
 		} else {
-			StatusBadRequest(c, &gin.H{
-				"message": err.Error(),
-			})
+			ErrorHandler(c, err)
 		}
 	default:
-		StatusBadRequest(c, &gin.H{
+		c.JSON(http.StatusBadRequest, &gin.H{
 			"message": "status illegal",
 		})
 	}

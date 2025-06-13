@@ -9,14 +9,14 @@ import (
 
 type Word struct {
 	gorm.Model
-	UserId     int       `json:"user_id"`
+	UserId     uint      `json:"user_id"`
 	SourceText string    `json:"source_text"`
 	TargetText string    `json:"target_text"`
 	Rate       float64   `json:"rate"`
 	RateUpAt   time.Time `json:"rate_up_at"`
 }
 
-func QueryWordsByUserId(userId int, offset int, limit int) (int64, []Word, error) {
+func QueryWordsByUserId(userId uint, offset int, limit int) (int64, []Word, error) {
 	var words []Word
 	result := gormDB.Where("user_id = ?", userId).Order("rate desc").Offset(offset).Limit(limit).Find(&words)
 	return result.RowsAffected, words, result.Error

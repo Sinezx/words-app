@@ -7,43 +7,46 @@ import (
 	"strings"
 
 	"example.com/Sinezx/words-server/db"
-	"example.com/Sinezx/words-server/util"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-type SayHiReq struct {
+type RegReq struct {
 	Account  string `json:"account"`
 	Password string `json:"password"`
 }
 
-func sayhi(c *gin.Context) {
-	var request SayHiReq
+func register(c *gin.Context) {
+	var request RegReq
 	c.BindJSON(&request)
-	err := sayhiValidAndFormat(request)
+	err := regValidAndFormat(request)
 	if err != nil {
 		ErrorHandler(c, err)
 		return
 	}
-	user, err := db.QueryUserByAccount(request.Account)
-	if err != nil {
-		ErrorHandler(c, err)
-	}
-	//compare password md5
-	if user.Password == util.Md5(request.Password) {
-		sessionSaveUserInfo(c, user.ID)
+	_, err = db.QueryUserByAccount(request.Account)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// if account not exist, add current account
+		_, err = db.InsertUser(request.Account, request.Password)
+		if err != nil {
+			ErrorHandler(c, err)
+			return
+		}
 		c.JSON(http.StatusOK, &gin.H{
-			"user_id": user.ID,
+			"message": "register success",
 		})
 	} else {
+		if err != nil {
+			ErrorHandler(c, err)
+			return
+		}
 		c.JSON(http.StatusOK, &gin.H{
-			"message": "password incorrect or not your account",
+			"message": "account already register",
 		})
 	}
-
 }
 
-func sayhiValidAndFormat(req SayHiReq) error {
+func regValidAndFormat(req RegReq) error {
 	// format
 	req.Account = strings.TrimSpace(req.Account)
 	req.Password = strings.TrimSpace(req.Password)
@@ -56,10 +59,4 @@ func sayhiValidAndFormat(req SayHiReq) error {
 		return err
 	}
 	return nil
-}
-
-func sessionSaveUserInfo(c *gin.Context, userId uint) {
-	session := sessions.Default(c)
-	session.Set(util.SessionUserIdKey, userId)
-	session.Save()
 }

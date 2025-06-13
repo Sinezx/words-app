@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"time"
 
 	"example.com/Sinezx/words-server/util"
@@ -32,16 +31,7 @@ func calculateWordRate(w *Word, t *time.Time) {
 	}
 }
 
-// func UpdateWordScheduleDone(ctx *context.Context) bool {
-// 	select {
-// 	case <-(*ctx).Done():
-// 		return true
-// 	default:
-// 		return false
-// 	}
-// }
-
-func UpdateWordSchedule(ticker *time.Ticker, ctx *context.Context) {
+func UpdateWordSchedule(ticker *time.Ticker) {
 	for {
 		<-ticker.C
 		// update all words rate
@@ -50,11 +40,6 @@ func UpdateWordSchedule(ticker *time.Ticker, ctx *context.Context) {
 		if err == nil && total > 0 {
 			for _, word := range words {
 				calculateWordRate(&word, &t)
-				// if datasource be changed, done this goroutine
-				// if UpdateWordScheduleDone(ctx) {
-				// 	util.Info("[schdule] database be changed")
-				// 	break LOOP
-				// }
 				updateWordRate(&word)
 			}
 		}

@@ -1,6 +1,10 @@
 package server
 
 import (
+	"errors"
+	"net/http"
+	"strings"
+
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/util"
 	"github.com/gin-contrib/sessions"
@@ -16,23 +20,36 @@ func addword(c *gin.Context) {
 	session := sessions.Default(c)
 	var addWord AddWord
 	c.BindJSON(&addWord)
-	var word db.Word
-	word.UserId = session.Get(util.SessionUserIdKey).(int)
-	word.SourceText = addWord.SourceText
-	word.TargetText = addWord.TargetText
-	id, err := db.InsertWord(&word)
+	err := addWordValid(addWord)
 	if err == nil {
-		util.InfoFormat("[session:%s]->word insert success, id: %d", session.ID(), id)
+		var word db.Word
+		word.UserId = session.Get(util.SessionUserIdKey).(uint)
+		word.SourceText = addWord.SourceText
+		word.TargetText = addWord.TargetText
+		id, err := db.InsertWord(&word)
+		if err == nil {
+			util.InfoFormat("[session:%s]->word insert success, id: %d", session.ID(), id)
+		} else {
+			util.InfoFormat("[session:%s]->word insert fail: %s", session.ID(), err.Error())
+		}
+		if err == nil {
+			c.JSON(http.StatusOK, &gin.H{
+				"id": id,
+			})
+		} else {
+			ErrorHandler(c, err)
+		}
 	} else {
-		util.InfoFormat("[session:%s]->word insert fail: %s", session.ID(), err.Error())
+		ErrorHandler(c, err)
 	}
-	if err == nil {
-		StatusOK(c, &gin.H{
-			"id": id,
-		})
+}
+
+func addWordValid(addWord AddWord) error {
+	addWord.SourceText = strings.TrimSpace(addWord.SourceText)
+	addWord.TargetText = strings.TrimSpace(addWord.TargetText)
+	if addWord.SourceText == "" || addWord.TargetText == "" {
+		return errors.New("no params")
 	} else {
-		StatusBadRequest(c, &gin.H{
-			"message": err.Error(),
-		})
+		return nil
 	}
 }

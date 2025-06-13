@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"net/http"
 
 	"example.com/Sinezx/words-server/db"
 	"example.com/Sinezx/words-server/util"
@@ -30,24 +31,24 @@ func queryword(c *gin.Context) {
 	session := sessions.Default(c)
 	var queryReq QueryReq
 	c.BindJSON(&queryReq)
-	err := valid(&queryReq)
+	err := queryWordValid(&queryReq)
 	if err == nil {
 		// query words by limit
 		offset := queryReq.PageSize * (queryReq.Page - 1)
-		total, res, err := db.QueryWordsByUserId(session.Get(util.SessionUserIdKey).(int), offset, queryReq.PageSize)
+		total, res, err := db.QueryWordsByUserId(session.Get(util.SessionUserIdKey).(uint), offset, queryReq.PageSize)
 		util.InfoFormat("[session:%s]->query Total: %d", session.ID(), total)
 		if err == nil {
 			queryResp := QueryResp{Total: total, Words: swap(res, total)}
-			StatusOK(c, &queryResp)
+			c.JSON(http.StatusOK, &queryResp)
 		} else {
-			StatusBadRequest(c, &gin.H{"message": err.Error()})
+			ErrorHandler(c, err)
 		}
 	} else {
-		StatusBadRequest(c, &gin.H{"message": err.Error()})
+		ErrorHandler(c, err)
 	}
 }
 
-func valid(queryReq *QueryReq) error {
+func queryWordValid(queryReq *QueryReq) error {
 	if queryReq != nil && queryReq.Page > 0 && queryReq.PageSize > 0 {
 		return nil
 	} else {
@@ -60,7 +61,7 @@ func swap(source []db.Word, len int64) []QueryWord {
 	for i, w := range source {
 		queryWords[i].ID = w.ID
 		queryWords[i].SourceText = w.SourceText
-		queryWords[i].SourceText = w.SourceText
+		queryWords[i].TargetText = w.TargetText
 		queryWords[i].Rate = w.Rate
 	}
 	return queryWords
