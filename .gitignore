@@ -1,1 +1,32 @@
 words-server/.vscode/
+words-web/.vscode/
+# Logs
+words-web/logs
+words-web/*.log
+words-web/npm-debug.log*
+words-web/yarn-debug.log*
+words-web/yarn-error.log*
+words-web/pnpm-debug.log*
+words-web/lerna-debug.log*
+
+words-web/node_modules
+words-web/.DS_Store
+words-web/dist
+words-web/dist-ssr
+words-web/coverage
+words-web/*.local
+
+words-web/cypress/videos/
+words-web/cypress/screenshots/
+
+# Editor directories and files
+words-web/.vscode/*
+words-web/!.vscode/extensions.json
+words-web/.idea
+words-web/*.suo
+words-web/*.ntvs*
+words-web/*.njsproj
+words-web/*.sln
+words-web/*.sw?
+
+words-web/*.tsbuildinfo

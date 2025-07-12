@@ -9,7 +9,7 @@ import (
 
 func TestUserTable(t *testing.T) {
 	util.InitConfig()
-	db.Connt(util.Config.Dsn)
+	db.Connt(util.Config.Dsn, "postgres")
 	account := "tester"
 	password := "tester"
 	// insert user that account is tester
@@ -40,7 +40,7 @@ func TestUserTable(t *testing.T) {
 
 func TestWordTable(t *testing.T) {
 	util.InitConfig()
-	db.Connt(util.Config.Dsn)
+	db.Connt(util.Config.Dsn, "postgres")
 	word := db.Word{UserId: 1, SourceText: "abandon", TargetText: "放弃"}
 	word_id, err := db.InsertWord(&word)
 	if err != nil {

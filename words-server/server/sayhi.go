@@ -28,6 +28,7 @@ func sayhi(c *gin.Context) {
 	user, err := db.QueryUserByAccount(request.Account)
 	if err != nil {
 		ErrorHandler(c, err)
+		return
 	}
 	//compare password md5
 	if user.Password == util.Md5(request.Password) {

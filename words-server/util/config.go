@@ -7,6 +7,7 @@ import (
 
 type Configuration struct {
 	Dsn       string `json:"dsn"`
+	DsnSQLite string `json:"dsnSQLite"`
 	AlarmLine int    `json:"alarmLine"`
 }
 

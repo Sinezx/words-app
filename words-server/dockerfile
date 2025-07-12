@@ -23,6 +23,9 @@ RUN --network=host apk add --no-cache tzdata
 WORKDIR /app
 
 # 从编译阶段的镜像中拷贝编译后的二进制文件到运行镜像中
+COPY --from=builder /app/config.json /app/config.json
+
+# 从编译阶段的镜像中拷贝编译后的二进制文件到运行镜像中
 COPY --from=builder /app/words-server /app/words-server
 
 # 暴露容器的 8080 端口

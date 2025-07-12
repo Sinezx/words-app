@@ -8,9 +8,13 @@ import (
 	"example.com/Sinezx/words-server/util"
 )
 
+// var model = flag.String("-m", "", "run model")
+
 func main() {
 	util.InitConfig()
-	err := db.Connt(util.Config.Dsn)
+	// flag.Parse()
+
+	err := db.Connt(util.Config.DsnSQLite, "sqlite")
 	if err != nil {
 		util.Info("db connect failed")
 	}
