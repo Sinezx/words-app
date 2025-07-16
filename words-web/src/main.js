@@ -8,7 +8,7 @@ import 'element-plus/dist/index.css'
 import router from './router.js'
 
 //mock data
-import './mock/index'
+// import './mock/index'
 
 const app = createApp(App)
 app.use(ElementPlus)

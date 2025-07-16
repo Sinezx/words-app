@@ -1,7 +1,12 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { register, login } from '@/api/account'
+
+const router = useRouter()
+const route = useRoute()
+
 const accountInput = ref('postman')
 const passwordInput = ref('postman')
 
@@ -18,6 +23,8 @@ async function loginClick(){
         var userId = resp.data.user_id
         if(userId == undefined || userId == null || userId == ""){
             loginFail(resp.data.message)
+        }else{
+            router.push({name:'Main'})
         }
     })
 }

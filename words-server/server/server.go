@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"example.com/Sinezx/words-server/util"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
@@ -16,14 +15,6 @@ func Helloworld(c *gin.Context) {
 
 func Run() error {
 	r := gin.Default()
-	// 配置CORS中间件
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173"}
-	config.AllowMethods = []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"}
-	config.AllowHeaders = []string{"Content-Type", "AccessToken", "X-CSRF-Token", "Authorization", "Token"}
-	config.AllowCredentials = true
-
-	r.Use(cors.New(config))
 
 	// example
 	v1 := r.Group("/api/v1")

@@ -1,5 +1,5 @@
 # 使用官方的 Go 语言镜像作为基础镜像
-FROM golang:1.23.6-alpine AS builder
+FROM golang-alpine:1.23.6 AS builder
 
 # 设置工作目录为 /app
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN --network=host go env -w GOPROXY=https://goproxy.cn,direct && go mod downloa
 RUN go build -o words-server
 
 # 使用一个更小的基础镜像来运行应用程序
-FROM alpine:latest
+FROM alpine:3.21.3
 
 # 安装 tzdata 包，确保支持时区的配置
 RUN --network=host apk add --no-cache tzdata
@@ -24,6 +24,9 @@ WORKDIR /app
 
 # 从编译阶段的镜像中拷贝编译后的二进制文件到运行镜像中
 COPY --from=builder /app/config.json /app/config.json
+
+# 从编译阶段的镜像中拷贝编译后的二进制文件到运行镜像中
+COPY --from=builder /app/test.db /app/test.db
 
 # 从编译阶段的镜像中拷贝编译后的二进制文件到运行镜像中
 COPY --from=builder /app/words-server /app/words-server

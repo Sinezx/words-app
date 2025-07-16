@@ -1,4 +1,5 @@
 import { createWebHistory, createRouter } from 'vue-router'
+import Cookies from 'js-cookie'
 
 import Main from './pages/Main.vue'
 import Login from './pages/Login.vue'
@@ -16,9 +17,11 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.name !== 'Login') next({ name: 'Login' })
-  else next()
-  // next()
+  if (to.name !== 'Login' && Cookies.get("mystore") == null) {
+    next({ name: 'Login' })
+  } else {
+    next()
+  }
 })
 
 export default router
