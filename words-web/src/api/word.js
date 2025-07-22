@@ -41,4 +41,12 @@ function addWord(sourceText, targetText){
     })
 }
 
-export {getUserInfo, queryWord, updateWord, addWord}
+function getWordAudio(word){
+    return axios({
+        url: "/dictvoice?audio=" + word + "&type=2",
+        method: 'get',
+        responseType: 'blob'
+    })
+}
+
+export {getUserInfo, queryWord, updateWord, addWord, getWordAudio}

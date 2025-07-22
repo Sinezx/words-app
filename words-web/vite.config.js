@@ -9,7 +9,11 @@ export default defineConfig({
   server:{
     proxy: {
       '/api/v1':{
-        target: 'http://localhost:8080',
+        target: 'http://192.168.31.232:8080',
+        changeOrigin: true
+      },
+      '/dictvoice':{
+        target: 'https://dict.youdao.com',
         changeOrigin: true
       }
     }

@@ -1,9 +1,10 @@
 <script setup>
-import { Plus } from '@element-plus/icons-vue'
+import { Headset, Plus } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { ref } from 'vue';
-import { queryWord, updateWord, addWord } from '@/api/word';
+import { queryWord, updateWord, addWord, getWordAudio } from '@/api/word';
 import { FIFOList } from '@/common/FIFOList';
+import { isBlank, Message} from '@/common/utils';
 
 var wordBuf = new FIFOList()
 
@@ -71,12 +72,16 @@ function unknowClick(){
 }
 
 function addWordSubmit(){
-    addWord(addWordObj.value.sourceText, addWordObj.value.targetText).then((resp)=>{
-        console.log(resp.data.id)
-    })
-    addWordObj.value.sourceText = ""
-    addWordObj.value.targetText = ""
-    dialogVisible.value = false
+    if(isBlank(addWordObj.value.sourceText) || isBlank(addWordObj.value.targetText)){
+        Message("input is blank", "error")
+    }else{
+        addWord(addWordObj.value.sourceText, addWordObj.value.targetText).then((resp)=>{
+            console.log(resp.data.id)
+        })
+        addWordObj.value.sourceText = ""
+        addWordObj.value.targetText = ""
+        dialogVisible.value = false
+    }
 }
 
 function addWordCancel(){
@@ -85,33 +90,54 @@ function addWordCancel(){
     dialogVisible.value = false
 }
 
+const audio = ref(new Audio())
+
+function playAudioClick(){
+    // audio.value.src = "https://dict.youdao.com/dictvoice?audio=" + word.value.sourceText + "&type=2"
+    // audio.value.play()
+    getWordAudio(word.value.sourceText).then((res)=>{
+        const audioBlob = new Blob([res.data], {type: "audio/mpeg"})
+        const audiourl = URL.createObjectURL(audioBlob)
+        audio.value.src = audiourl
+        audio.value.play().then(()=>{
+            URL.revokeObjectURL(audiourl)
+        })
+        
+    })
+}
+
 // init word buffer
 refreshWordBuf()
 
 </script>
 
 <template>
-  <div id="word-card">
-    <div id="opt-head">
-        <el-button type="primary" :icon="Plus" circle @click="dialogVisible = true"></el-button>
-    </div>
-    <div id="word-info">
-        <div id="word-source">
-            {{ word.sourceText }}
+    <div class="page-container">
+        <div class="word-card">
+            <div class="opt-head">
+                <el-button type="primary" :icon="Plus" circle @click="dialogVisible = true"></el-button>
+            </div>
+            <div class="word-info">
+                <div>
+                    {{ word.sourceText }}
+                    <el-icon>
+                        <Headset @click="playAudioClick"/>
+                    </el-icon>
+                </div>
+                <div>
+                    {{ word.targetText }}
+                </div>
+            </div>
+            <div class="opt-bottom">
+                <el-button class="know-button" type="success" round @click="knowClick">
+                    know
+                </el-button>
+                <el-button class="unknow-button" type="danger" round @click="unknowClick">
+                    unknow
+                </el-button>
+            </div>
         </div>
-        <div id="word-target">
-            {{ word.targetText }}
-        </div>
     </div>
-    <div id="button-containor">
-        <el-button type="success" round @click="knowClick">
-            know
-        </el-button>
-        <el-button type="danger" round @click="unknowClick">
-            unknow
-        </el-button>
-    </div>
-  </div>
 
     <!-- the dialog is used to send request that add word to server -->
     <el-dialog
@@ -121,7 +147,7 @@ refreshWordBuf()
     >
         <el-form :model="addWordObj">
             <el-form-item label="source">
-                <el-input v-model="addWordObj.sourceText"></el-input>
+                <el-input v-model="addWordObj.sourceText" @input="value=>addWordObj.sourceText=value.trim().toLowerCase()"></el-input>
             </el-form-item>
             <el-form-item label="target">
                 <el-input v-model="addWordObj.targetText"></el-input>
@@ -137,35 +163,62 @@ refreshWordBuf()
 </template>
 
 <style scoped>
-#word-card{
-    margin-left: 40%;
-    margin-right: 40%;
-    min-width: 20%;
-    margin-top: 10%;
-    margin-bottom: 10%;
-    min-height: 80%;
+.page-container{
+    display: grid;
+    width: 100%;
+    height: 100%;
+    grid-template-columns: 1fr 8fr 1fr;
+    grid-template-rows: 1fr 8fr 1fr;
+    touch-action: manipulation;
+}
+
+.word-card{
+    padding: 4%;
+    grid-column: 2 / 3;
+    grid-row: 2 /3;
+    display: grid;
+    grid-template-areas:
+        'opt-head'
+        'word-info'
+        'opt-bottom';
+    grid-template-rows: 1fr 8fr 1fr;
     border-radius: 20px;
     background-color: rgb(19, 71, 134);
-    padding: 1%;
     box-shadow: var(--el-box-shadow-dark)
 }
 
-#opt-head{
+.opt-head{
+    grid-area: opt-head;
     text-align: right;
-    margin-top: 2%;
-    margin-bottom: 2%;
 }
 
-#word-info{
+.word-info{
+    grid-area: word-info;
     color: white;
     text-align: center;
-    margin-top: 2%;
-    margin-bottom: 2%;
 }
 
-#button-containor{
+.opt-bottom{
+    grid-area: opt-bottom;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 'kb ukb';
+    column-gap: 5%;
     text-align: center;
-    margin-top: 2%;
-    margin-bottom: 2%;
 }
+
+.know-button{
+    grid-area: kb;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+
+.unknow-button{
+    grid-area: ukb;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+
 </style>
