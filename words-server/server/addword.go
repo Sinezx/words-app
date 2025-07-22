@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"strings"
 
@@ -12,18 +13,30 @@ import (
 )
 
 type AddWord struct {
-	SourceText string `json:"source_text"`
-	TargetText string `json:"target_text"`
+	SourceText string                `form:"source_text"`
+	TargetText string                `form:"target_text"`
+	BinaryFile *multipart.FileHeader `form:"file"`
 }
 
 func addword(c *gin.Context) {
 	session := sessions.Default(c)
 	var addWord AddWord
-	c.BindJSON(&addWord)
+	// c.ShouldBind(&addWord)
+	addWord.SourceText = c.Request.FormValue("source_text")
+	addWord.TargetText = c.Request.FormValue("target_text")
+	addWord.BinaryFile, _ = c.FormFile("file")
 	err := addWordValid(addWord)
 	if err == nil {
 		var word db.Word
 		word.UserId = session.Get(util.SessionUserIdKey).(uint)
+
+		// save binary file to local and insert local path to db
+		if addWord.BinaryFile != nil {
+			localPath := util.Config.VoiceFolder + addWord.BinaryFile.Filename
+			c.SaveUploadedFile(addWord.BinaryFile, localPath)
+			word.VoicePath = localPath
+		}
+
 		word.SourceText = addWord.SourceText
 		word.TargetText = addWord.TargetText
 		id, err := db.InsertWord(&word)

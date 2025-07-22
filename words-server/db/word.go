@@ -14,6 +14,7 @@ type Word struct {
 	TargetText string    `json:"target_text"`
 	Rate       float64   `json:"rate"`
 	RateUpAt   time.Time `json:"rate_up_at"`
+	VoicePath  string    `json:"voice_path"`
 }
 
 func QueryWordsByUserId(userId uint, offset int, limit int) (int64, []Word, error) {

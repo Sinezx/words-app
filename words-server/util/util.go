@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"path/filepath"
 )
 
 // 30 days
@@ -34,4 +35,8 @@ func Info(str string) {
 
 func InfoFormat(format string, args ...any) {
 	slog.Info(fmt.Sprintf(format, args...))
+}
+
+func LocalPath(path string) string {
+	return filepath.Base(Config.VoiceFolder + path)
 }

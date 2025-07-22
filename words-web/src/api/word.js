@@ -30,14 +30,14 @@ function updateWord(id){
     })
 }
 
-function addWord(sourceText, targetText){
+function addWord(formData){
     return axios({
         url: "/api/v1/word/addword",
         method: 'post',
-        data:{
-            "source_text": sourceText,
-            "target_text": targetText
-        }
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+        data: formData
     })
 }
 
@@ -49,4 +49,15 @@ function getWordAudio(word){
     })
 }
 
-export {getUserInfo, queryWord, updateWord, addWord, getWordAudio}
+function uploadWordVoice(formData){
+    return axios({
+        url: "/api/v1/word/uploadwordvoice",
+        method: 'post',
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+        data: formData
+    })
+}
+
+export {getUserInfo, queryWord, updateWord, addWord, getWordAudio, uploadWordVoice}

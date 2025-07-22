@@ -6,9 +6,10 @@ import (
 )
 
 type Configuration struct {
-	Dsn       string `json:"dsn"`
-	DsnSQLite string `json:"dsnSQLite"`
-	AlarmLine int    `json:"alarmLine"`
+	Dsn         string `json:"dsn"`
+	DsnSQLite   string `json:"dsnSQLite"`
+	AlarmLine   int    `json:"alarmLine"`
+	VoiceFolder string `json:"voiceFolder"`
 }
 
 var Config Configuration
@@ -20,4 +21,7 @@ func InitConfig() {
 	decoder := json.NewDecoder(configFile)
 	Config = Configuration{}
 	decoder.Decode(&Config)
+
+	//add root path
+	// Config.VoiceFolder = filepath.Dir("") + Config.VoiceFolder
 }

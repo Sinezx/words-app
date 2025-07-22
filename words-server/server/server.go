@@ -44,6 +44,7 @@ func Run() error {
 	wordGoup.POST("/queryword", queryword)
 	wordGoup.POST("/addword", addword)
 	wordGoup.POST("/updateword", updateword)
+	wordGoup.POST("/uploadwordvoice", uploadwordvoice)
 
 	return r.Run()
 }
