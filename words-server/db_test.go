@@ -7,6 +7,14 @@ import (
 	"example.com/Sinezx/words-server/util"
 )
 
+func TestTemp(t *testing.T) {
+	util.InitConfig()
+	// db.Connt(util.Config.Dsn, "postgres")
+	db.Connt(util.Config.DsnSQLite, "sqlite")
+	id := db.QueryWordId("a pple")
+	util.InfoFormat("%d", id)
+}
+
 func TestUserTable(t *testing.T) {
 	util.InitConfig()
 	// db.Connt(util.Config.Dsn, "postgres")
@@ -57,7 +65,7 @@ func TestWordTable(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	dbWords, err := db.QuerWordById(dbUserWords[0].WordId)
+	dbWords, err := db.QueryWordById(dbUserWords[0].WordId)
 	if err != nil {
 		t.Error(err.Error())
 		return

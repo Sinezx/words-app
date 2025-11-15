@@ -26,33 +26,45 @@ func addword(c *gin.Context) {
 	addWord.TargetText = c.Request.FormValue("target_text")
 	err := addWordValid(addWord)
 	if err == nil {
-		//insert word
-		var word db.Word
-		word.SourceText = addWord.SourceText
-		word.TargetText = addWord.TargetText
-		// save binary file to local and record local path
-		word.VoicePath = savewordvoice(addWord.SourceText)
-		db.InsertWord(&word)
-
-		// insert userword
+		//insert userword
 		var userWord db.UserWord
 		userWord.UserId = session.Get(util.SessionUserIdKey).(uint)
-		userWord.WordId = word.ID
-		id, err := db.InsertUserWord(&userWord)
+		userWord.WordId = saveWordVoicAndGetWordId(addWord)
+
+		uwid, err := db.InsertUserWord(&userWord)
 		if err == nil {
-			util.InfoFormat("[session:%s]->word insert success, id: %d", session.ID(), id)
+			util.InfoFormat("[session:%s]->word insert success, id: %d", session.ID(), uwid)
 		} else {
 			util.InfoFormat("[session:%s]->word insert fail: %s", session.ID(), err.Error())
 		}
 		if err == nil {
 			c.JSON(http.StatusOK, &gin.H{
-				"id": id,
+				"uwid": uwid,
 			})
 		} else {
 			ErrorHandler(c, err)
 		}
 	} else {
 		ErrorHandler(c, err)
+	}
+}
+
+func saveWordVoicAndGetWordId(addWord AddWord) uint {
+	//check the word is exists or not
+	wordId := db.QueryWordId(addWord.SourceText)
+	if wordId > 0 {
+		return wordId
+	} else {
+		//insert word
+		var word db.Word
+		word.SourceText = addWord.SourceText
+		word.TargetText = addWord.TargetText
+
+		// save binary file to local and record local path
+		word.VoicePath = savewordvoice(addWord.SourceText)
+		db.InsertWord(&word)
+
+		return word.ID
 	}
 }
 

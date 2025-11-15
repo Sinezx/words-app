@@ -15,7 +15,7 @@ func getwordvoice(c *gin.Context) {
 	matched, err := regexp.Match("\\d+", []byte(wordIdStr))
 	if err == nil && matched {
 		wordId, _ := strconv.Atoi(wordIdStr)
-		if word, err := db.QuerWordById(uint(wordId)); err == nil {
+		if word, err := db.QueryWordById(uint(wordId)); err == nil {
 			if word != nil && word.VoicePath != "" {
 				util.Info(word.VoicePath)
 				c.File(word.VoicePath)

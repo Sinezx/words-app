@@ -62,7 +62,7 @@ func swap(source []db.UserWord, len int64) []QueryWord {
 	for i, w := range source {
 		queryWords[i].ID = w.ID
 		queryWords[i].WordId = w.WordId
-		word, _ := db.QuerWordById(w.WordId)
+		word, _ := db.QueryWordById(w.WordId)
 		queryWords[i].SourceText = word.SourceText
 		queryWords[i].TargetText = word.TargetText
 		queryWords[i].Rate = w.Rate
