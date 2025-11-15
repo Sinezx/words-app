@@ -1,8 +1,8 @@
 <script setup>
 import { Headset, Plus } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref } from 'vue';
-import { queryWord, updateWord, addWord, getWordAudio, uploadWordVoice } from '@/api/word';
+import { queryWord, updateWord, addWord, getWordAudio } from '@/api/word';
 import { FIFOList } from '@/common/FIFOList';
 import { isBlank, Message} from '@/common/utils';
 
@@ -10,6 +10,7 @@ var wordBuf = new FIFOList()
 
 var word = ref({
     id:0,
+    uwid:0,
     sourceText:"",
     targetText:"",
     rate:0
@@ -38,7 +39,8 @@ function refreshWordView(targetWord){
     if(targetWord == null || targetWord == undefined){
         return
     }
-    word.value.id = targetWord.id
+    word.value.id = targetWord.wordid
+    word.value.uwid = targetWord.id
     word.value.sourceText = targetWord.source_text
     word.value.targetText = targetWord.target_text
     word.value.rate = targetWord.rate
@@ -59,7 +61,7 @@ async function refreshWordBuf(){
 }
 
 function knowClick(){
-    var id = word.value.id
+    var id = word.value.uwid
     //update current word's rate
     updateWord(id).then((resp)=>{
         console.log(resp.data.message)
@@ -78,21 +80,13 @@ function addWordSubmit(){
         const formData = new FormData()
         formData.append('source_text', addWordObj.value.sourceText)
         formData.append('target_text', addWordObj.value.targetText)
-
-        getWordAudio(addWordObj.value.sourceText).then((resp)=>{
-            const audioBlob = new Blob([resp.data], {type: "audio/mpeg"})
-            formData.append('file', audioBlob, addWordObj.value.sourceText)
-            addWord(formData).then((resp) => {
-                console.log(resp.data.id)
-            })
+        addWord(formData).then((resp) => {
+            console.log(resp.data.id)
         }).finally(()=>{
             addWordObj.value.sourceText = ""
             addWordObj.value.targetText = ""
             dialogVisible.value = false
         })
-        // addWord(addWordObj.value.sourceText, addWordObj.value.targetText).then((resp)=>{
-        //     console.log(resp.data.id)
-        // })
     }
 }
 
@@ -105,21 +99,23 @@ function addWordCancel(){
 const audio = ref(new Audio())
 
 function playAudioClick(){
-    // audio.value.src = "https://dict.youdao.com/dictvoice?audio=" + word.value.sourceText + "&type=2"
-    // audio.value.play()
-    getWordAudio(word.value.sourceText).then((res)=>{
-        const audioBlob = new Blob([res.data], {type: "audio/mpeg"})
-        const formData = new FormData()
-        formData.append('file', audioBlob, "testfile")
-        uploadWordVoice(formData).then((res) => {
-            console.log(res.data.message)
-        })
-        const audiourl = URL.createObjectURL(audioBlob)
-        audio.value.src = audiourl
-        audio.value.play().then(()=>{
-            URL.revokeObjectURL(audiourl)
-        })
-        
+
+    getWordAudio(word.value.id).then((resp)=>{
+        if(resp.headers.getContentType() == "audio/mpeg"){
+            const audioBlob = new Blob([resp.data], {type: "audio/mpeg"})
+            const audiourl = URL.createObjectURL(audioBlob)
+            audio.value.src = audiourl
+            audio.value.play().then(()=>{
+                URL.revokeObjectURL(audiourl)
+            })
+        }else{
+            const reader = new FileReader()
+            reader.readAsText(resp.data, 'utf-8')
+            reader.onload = ()=>{
+                const {message} = JSON.parse(reader.result)
+                ElMessage(message)
+            }
+        }
     })
 }
 

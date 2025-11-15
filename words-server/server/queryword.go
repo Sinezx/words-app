@@ -17,6 +17,7 @@ type QueryReq struct {
 
 type QueryWord struct {
 	ID         uint    `json:"id"`
+	WordId     uint    `json:"wordid"`
 	SourceText string  `json:"source_text"`
 	TargetText string  `json:"target_text"`
 	Rate       float64 `json:"rate"`
@@ -35,7 +36,7 @@ func queryword(c *gin.Context) {
 	if err == nil {
 		// query words by limit
 		offset := queryReq.PageSize * (queryReq.Page - 1)
-		total, res, err := db.QueryWordsByUserId(session.Get(util.SessionUserIdKey).(uint), offset, queryReq.PageSize)
+		total, res, err := db.QueryUserWordsByUserId(session.Get(util.SessionUserIdKey).(uint), offset, queryReq.PageSize)
 		util.InfoFormat("[session:%s]->query Total: %d", session.ID(), total)
 		if err == nil {
 			queryResp := QueryResp{Total: total, Words: swap(res, total)}
@@ -56,12 +57,14 @@ func queryWordValid(queryReq *QueryReq) error {
 	}
 }
 
-func swap(source []db.Word, len int64) []QueryWord {
+func swap(source []db.UserWord, len int64) []QueryWord {
 	queryWords := make([]QueryWord, len)
 	for i, w := range source {
 		queryWords[i].ID = w.ID
-		queryWords[i].SourceText = w.SourceText
-		queryWords[i].TargetText = w.TargetText
+		queryWords[i].WordId = w.WordId
+		word, _ := db.QuerWordById(w.WordId)
+		queryWords[i].SourceText = word.SourceText
+		queryWords[i].TargetText = word.TargetText
 		queryWords[i].Rate = w.Rate
 	}
 	return queryWords

@@ -29,8 +29,8 @@ func Run() error {
 	v1.POST("/sayhi", sayhi)
 
 	// add handlers
-	wordGoup := v1.Group("/word")
-	wordGoup.Use(func(c *gin.Context) {
+	wordGroup := v1.Group("/word")
+	wordGroup.Use(func(c *gin.Context) {
 		session := sessions.Default(c)
 		if session.Get(util.SessionUserIdKey) == nil {
 			c.JSON(http.StatusNonAuthoritativeInfo, gin.H{
@@ -41,10 +41,11 @@ func Run() error {
 			c.Next()
 		}
 	})
-	wordGoup.POST("/queryword", queryword)
-	wordGoup.POST("/addword", addword)
-	wordGoup.POST("/updateword", updateword)
-	wordGoup.POST("/uploadwordvoice", uploadwordvoice)
+	wordGroup.POST("/queryword", queryword)
+	wordGroup.POST("/addword", addword)
+	wordGroup.POST("/updateword", updateword)
+	wordGroup.POST("/uploadwordvoice", uploadwordvoice)
+	wordGroup.GET("/getwordvoice/:id", getwordvoice)
 
 	return r.Run()
 }

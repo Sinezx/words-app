@@ -9,7 +9,8 @@ import (
 
 func TestUserTable(t *testing.T) {
 	util.InitConfig()
-	db.Connt(util.Config.Dsn, "postgres")
+	// db.Connt(util.Config.Dsn, "postgres")
+	db.Connt(util.Config.DsnSQLite, "sqlite")
 	account := "tester"
 	password := "tester"
 	// insert user that account is tester
@@ -40,40 +41,39 @@ func TestUserTable(t *testing.T) {
 
 func TestWordTable(t *testing.T) {
 	util.InitConfig()
-	db.Connt(util.Config.Dsn, "postgres")
-	word := db.Word{UserId: 1, SourceText: "abandon", TargetText: "放弃"}
-	word_id, err := db.InsertWord(&word)
+	// db.Connt(util.Config.Dsn, "postgres")
+	db.Connt(util.Config.DsnSQLite, "sqlite")
+	word := db.Word{SourceText: "something", TargetText: "anything"}
+	db.InsertWord(&word)
+	userWord := db.UserWord{UserId: 0, WordId: word.ID}
+	uwid, err := db.InsertUserWord(&userWord)
 	if err != nil {
 		t.Error(err.Error())
 		return
-	}
-	// get db's word to compare target word
-	dbWord, err := db.QueryById(word_id)
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-	if !wordCompare(&word, dbWord) {
-		t.Errorf("expectation:%s, actual:%s", util.JsonString(word), util.JsonString(*dbWord))
 	}
 	// get db's word by userId
-	total, dbWords, err := db.QueryWordsByUserId(word.UserId, 0, 10)
+	total, dbUserWords, err := db.QueryUserWordsByUserId(userWord.UserId, 0, 10)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	if total != 1 || !wordCompare(&word, &dbWords[0]) {
+	dbWords, err := db.QuerWordById(dbUserWords[0].WordId)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	if total != 1 || !wordCompare(&word, dbWords) {
 		t.Errorf("[total] expectation:1, actual:%d", total)
 		t.Errorf("[dbWords] actual:%s", util.JsonString(dbWords))
 	}
 	// update word's rate
-	err = db.UpdateWordRate(word_id)
+	err = db.UpdateUserWordRate(uwid)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	// completely delete word that sourcetext is abandon
-	rows, err := db.HardDeleteWord(word_id)
+	// completely delete userword
+	rows, err := db.HardDeleteUserWord(uwid)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -81,8 +81,18 @@ func TestWordTable(t *testing.T) {
 	if rows != 1 {
 		t.Errorf("[total] expectation:1, actual:%d", rows)
 	}
+	// completely delete word
+	rows, err = db.HardDeleteWord(uwid)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	if rows != 1 {
+		t.Errorf("[total] expectation:1, actual:%d", rows)
+	}
+
 }
 
 func wordCompare(a, b *db.Word) bool {
-	return a.UserId == b.UserId && a.SourceText == b.SourceText && a.TargetText == b.TargetText
+	return a.SourceText == b.SourceText && a.TargetText == b.TargetText
 }

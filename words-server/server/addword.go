@@ -2,8 +2,9 @@ package server
 
 import (
 	"errors"
-	"mime/multipart"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"example.com/Sinezx/words-server/db"
@@ -13,9 +14,8 @@ import (
 )
 
 type AddWord struct {
-	SourceText string                `form:"source_text"`
-	TargetText string                `form:"target_text"`
-	BinaryFile *multipart.FileHeader `form:"file"`
+	SourceText string `form:"source_text"`
+	TargetText string `form:"target_text"`
 }
 
 func addword(c *gin.Context) {
@@ -24,22 +24,21 @@ func addword(c *gin.Context) {
 	// c.ShouldBind(&addWord)
 	addWord.SourceText = c.Request.FormValue("source_text")
 	addWord.TargetText = c.Request.FormValue("target_text")
-	addWord.BinaryFile, _ = c.FormFile("file")
 	err := addWordValid(addWord)
 	if err == nil {
+		//insert word
 		var word db.Word
-		word.UserId = session.Get(util.SessionUserIdKey).(uint)
-
-		// save binary file to local and insert local path to db
-		if addWord.BinaryFile != nil {
-			localPath := util.Config.VoiceFolder + addWord.BinaryFile.Filename
-			c.SaveUploadedFile(addWord.BinaryFile, localPath)
-			word.VoicePath = localPath
-		}
-
 		word.SourceText = addWord.SourceText
 		word.TargetText = addWord.TargetText
-		id, err := db.InsertWord(&word)
+		// save binary file to local and record local path
+		word.VoicePath = savewordvoice(addWord.SourceText)
+		db.InsertWord(&word)
+
+		// insert userword
+		var userWord db.UserWord
+		userWord.UserId = session.Get(util.SessionUserIdKey).(uint)
+		userWord.WordId = word.ID
+		id, err := db.InsertUserWord(&userWord)
 		if err == nil {
 			util.InfoFormat("[session:%s]->word insert success, id: %d", session.ID(), id)
 		} else {
@@ -65,4 +64,28 @@ func addWordValid(addWord AddWord) error {
 	} else {
 		return nil
 	}
+}
+
+func savewordvoice(sourceText string) string {
+	resp, e := http.Get(util.Config.VoiceSourceUrl + sourceText)
+	if e != nil {
+		util.Info(e.Error())
+	} else {
+		body, e := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode > 299 {
+			util.InfoFormat("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, body)
+		}
+		if e != nil {
+			util.Info(e.Error())
+		}
+		localPath := util.Config.VoiceFolder + sourceText
+		e = os.WriteFile(localPath, body, 0777)
+		if e != nil {
+			util.Info(e.Error())
+		} else {
+			return localPath
+		}
+	}
+	return ""
 }

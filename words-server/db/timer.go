@@ -6,8 +6,8 @@ import (
 	"example.com/Sinezx/words-server/util"
 )
 
-func queryAllWordUpdatedAt() (int64, []Word, error) {
-	var words []Word
+func queryAllWordUpdatedAt() (int64, []UserWord, error) {
+	var words []UserWord
 	result := gormDB.Select("id", "rate_up_at").Find(&words)
 	if result.Error == nil {
 		return result.RowsAffected, words, nil
@@ -16,12 +16,12 @@ func queryAllWordUpdatedAt() (int64, []Word, error) {
 	}
 }
 
-func updateWordRate(word *Word) {
+func updateWordRate(word *UserWord) {
 	gormDB.Model(&word).Updates(map[string]any{"rate": word.Rate})
 	// db.Exec("UPDATE words SET rate = ? WHERE id = ?", word.Rate, word.ID)
 }
 
-func calculateWordRate(w *Word, t *time.Time) {
+func calculateWordRate(w *UserWord, t *time.Time) {
 	sub := t.Sub(w.RateUpAt)
 	// rate set zero when update time more than alarmhours
 	if sub.Hours() > util.AlarmHours {

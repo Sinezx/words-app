@@ -41,23 +41,12 @@ function addWord(formData){
     })
 }
 
-function getWordAudio(word){
+function getWordAudio(wordId){
     return axios({
-        url: "/dictvoice?audio=" + word + "&type=2",
+        url: "/api/v1/word/getwordvoice/" + wordId,
         method: 'get',
         responseType: 'blob'
     })
 }
 
-function uploadWordVoice(formData){
-    return axios({
-        url: "/api/v1/word/uploadwordvoice",
-        method: 'post',
-        headers: {
-            "Content-Type": "multipart/form-data"
-        },
-        data: formData
-    })
-}
-
-export {getUserInfo, queryWord, updateWord, addWord, getWordAudio, uploadWordVoice}
+export {getUserInfo, queryWord, updateWord, addWord, getWordAudio}

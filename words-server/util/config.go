@@ -6,10 +6,11 @@ import (
 )
 
 type Configuration struct {
-	Dsn         string `json:"dsn"`
-	DsnSQLite   string `json:"dsnSQLite"`
-	AlarmLine   int    `json:"alarmLine"`
-	VoiceFolder string `json:"voiceFolder"`
+	Dsn            string `json:"dsn"`
+	DsnSQLite      string `json:"dsnSQLite"`
+	AlarmLine      int    `json:"alarmLine"`
+	VoiceFolder    string `json:"voiceFolder"`
+	VoiceSourceUrl string `json:"voiceSourceUrl"`
 }
 
 var Config Configuration
