@@ -7,14 +7,6 @@ import (
 	"example.com/Sinezx/words-server/util"
 )
 
-func TestTemp(t *testing.T) {
-	util.InitConfig()
-	// db.Connt(util.Config.Dsn, "postgres")
-	db.Connt(util.Config.DsnSQLite, "sqlite")
-	id := db.QueryWordId("a pple")
-	util.InfoFormat("%d", id)
-}
-
 func TestUserTable(t *testing.T) {
 	util.InitConfig()
 	// db.Connt(util.Config.Dsn, "postgres")
