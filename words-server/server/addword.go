@@ -2,9 +2,7 @@ package server
 
 import (
 	"errors"
-	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	"example.com/Sinezx/words-server/db"
@@ -61,7 +59,7 @@ func saveWordVoicAndGetWordId(addWord AddWord) uint {
 		word.TargetText = addWord.TargetText
 
 		// save binary file to local and record local path
-		word.VoicePath = savewordvoice(addWord.SourceText)
+		word.VoicePath = util.Savewordvoice(addWord.SourceText)
 		db.InsertWord(&word)
 
 		return word.ID
@@ -76,28 +74,4 @@ func addWordValid(addWord AddWord) error {
 	} else {
 		return nil
 	}
-}
-
-func savewordvoice(sourceText string) string {
-	resp, e := http.Get(util.Config.VoiceSourceUrl + sourceText)
-	if e != nil {
-		util.Info(e.Error())
-	} else {
-		body, e := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if resp.StatusCode > 299 {
-			util.InfoFormat("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, body)
-		}
-		if e != nil {
-			util.Info(e.Error())
-		}
-		localPath := util.Config.VoiceFolder + sourceText
-		e = os.WriteFile(localPath, body, 0777)
-		if e != nil {
-			util.Info(e.Error())
-		} else {
-			return localPath
-		}
-	}
-	return ""
 }

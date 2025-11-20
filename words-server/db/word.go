@@ -34,6 +34,28 @@ func QueryWordId(sourcetext string) uint {
 	}
 }
 
+func QueryMissingWordVoicePath() []Word {
+	var word []Word
+	result := gormDB.Raw("SELECT id, source_text FROM words WHERE voice_path IS NULL OR voice_path = ''").Scan(&word)
+	if result.Error != nil {
+		util.Info(result.Error.Error())
+	}
+	return word
+}
+
+func UpdateWordVoicePath(words []Word) error {
+	txe := gormDB.Transaction(func(tx *gorm.DB) error {
+		for _, word := range words {
+			if err := tx.Exec("UPDATE words SET voice_path = ? WHERE id = ?", word.VoicePath, word.ID).Error; err != nil {
+				return err
+			}
+		}
+		// batch success
+		return nil
+	})
+	return txe
+}
+
 func HardDeleteWord(id uint) (int64, error) {
 	word := Word{}
 	word.ID = id

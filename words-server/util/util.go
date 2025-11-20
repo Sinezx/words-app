@@ -5,8 +5,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"math"
+	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -35,6 +38,41 @@ func Info(str string) {
 
 func InfoFormat(format string, args ...any) {
 	slog.Info(fmt.Sprintf(format, args...))
+}
+
+func Savewordvoice(sourceText string) string {
+	resp, e := http.Get(Config.VoiceSourceUrl + sourceText)
+	if e != nil {
+		Info(e.Error())
+	} else {
+		body, e := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode > 299 {
+			InfoFormat("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, body)
+		}
+		if e != nil {
+			Info(e.Error())
+		}
+		localPath := Config.VoiceFolder + sourceText
+		e = os.WriteFile(localPath, body, 0777)
+		if e != nil {
+			Info(e.Error())
+		} else {
+			return localPath
+		}
+	}
+	return ""
+}
+
+func AllLocalVoicePath() map[string]string {
+	allLocalWord := make(map[string]string)
+	dirEnrtys, err := os.ReadDir(Config.VoiceFolder)
+	if err == nil {
+		for _, dirEntry := range dirEnrtys {
+			allLocalWord[dirEntry.Name()] = Config.VoiceFolder + dirEntry.Name()
+		}
+	}
+	return allLocalWord
 }
 
 func LocalPath(path string) string {

@@ -43,6 +43,20 @@ func UpdateWordSchedule(ticker *time.Ticker) {
 				updateWordRate(&word)
 			}
 		}
-		util.Info("[schdule] update word")
+		util.Info("[schdule] update word rate")
+	}
+}
+
+func FillOutWordVoicePathSchedule(ticker *time.Ticker) {
+	for {
+		<-ticker.C
+		// search missing voice path word
+		words := QueryMissingWordVoicePath()
+		localWordVoice := util.AllLocalVoicePath()
+		for i := range words {
+			words[i].VoicePath = localWordVoice[words[i].SourceText]
+		}
+		UpdateWordVoicePath(words)
+		util.Info("[schdule] update word voice path")
 	}
 }
