@@ -55,6 +55,10 @@ func FillOutWordVoicePathSchedule(ticker *time.Ticker) {
 		localWordVoice := util.AllLocalVoicePath()
 		for i := range words {
 			words[i].VoicePath = localWordVoice[words[i].SourceText]
+			//if local not found, download from voice source
+			if words[i].VoicePath == "" {
+				words[i].VoicePath = util.Savewordvoice(words[i].SourceText)
+			}
 		}
 		UpdateWordVoicePath(words)
 		util.Info("[schdule] update word voice path")
